@@ -1,5 +1,4 @@
 class Server {
-    
     #http;
     constructor(http) {
         this.#http = http;
@@ -23,7 +22,10 @@ class Server {
 
     start(port) {
         this.#http.listen(port, () => {
-            console.log(`server started on port  ${port}`);
+            
+            console.log('====================================');
+            console.log(`server started on port ${port}`);
+            console.log('====================================');
         })
     }
 }
