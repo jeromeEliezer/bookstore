@@ -13,7 +13,7 @@ server.middlewares(middlewares);
     try {
         await db.associateAll(db.sequelize.models)
         await db.sequelize.sync({alter: true})
-        await api.start(env.port);
+        await server.start(env.port);
     } catch (e) {
         console.error(e);
     }
