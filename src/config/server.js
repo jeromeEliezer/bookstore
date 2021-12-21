@@ -1,3 +1,5 @@
+import errorHandler from "../middlewares/errorHandler";
+
 class Server {
     
     #http;
@@ -23,7 +25,9 @@ class Server {
 
     start(port) {
         this.#http.listen(port, () => {
+            console.log('===============================');
             console.log(`server started on port  ${port}`);
+            console.log('===============================');
         })
     }
 }
