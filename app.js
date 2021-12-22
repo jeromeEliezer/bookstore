@@ -9,7 +9,7 @@ const http = express();
 const server = new Server(http);
 server.middlewares(middlewares);
 server.routes(routes);      
-// server.errorHandler(errorHandler)
+// server.errorHandler(errorHandler);
 
 (async () => {
     try {
