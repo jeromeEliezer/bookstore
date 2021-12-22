@@ -1,4 +1,3 @@
-import errorHandler from "../middlewares/errorHandler";
 
 class Server {
     

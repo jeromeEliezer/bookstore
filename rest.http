@@ -1,0 +1,10 @@
+GET http://localhost:3001/users/getAll
+// GET http://localhost:3001/users/getAll/1
+
+#####
+POST http://localhost:3001/users/create
+
+{
+    "name": "John Doe",
+    "email": "jhon@gmail.com"
+}
