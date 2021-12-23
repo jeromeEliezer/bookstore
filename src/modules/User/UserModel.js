@@ -1,5 +1,5 @@
-const { Model, DataTypes } = require('sequelize');
-const db = require('../../config/database');
+import { Model, DataTypes }  from 'sequelize';
+import db  from '../../config/database';
 
 class User extends Model {
     static init(sequelize) {
@@ -11,8 +11,8 @@ class User extends Model {
                     allowNull: false,
                     defaultValue: DataTypes.UUIDV4
                 },
-                first_name: DataTypes.STRING,
-                last_name: DataTypes.STRING,
+                firstName: DataTypes.STRING,
+                lastName: DataTypes.STRING,
                 email: {
                     type: DataTypes.STRING,
                 },

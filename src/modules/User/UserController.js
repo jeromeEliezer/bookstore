@@ -1,79 +1,91 @@
-const user = require('./userModel');
-const bcrypt = require('bcrypt');
-const env = require('../../config/env');
-const BadRequestError = require('../../helpers/errors/400_bad_request');
-const jwt = require('jsonwebtoken');
-const { CREATED } = require('../../helpers/StatusCode');
+import User from './UserModel';
+import bcrypt from 'bcrypt';
+import Jwt from "jsonwebtoken";
+import env from '../../config/env'
+import ForbiddenError from '../../helpers/errors/403_forbidden';
+import BadRequestError from '../../helpers/errors/400_bad_request';
 
-const userController = {
+class UserController {
+  #models;
+  constructor(models) {
+    this.#models = models;
+  }
 
-    getAll: async (req, res, next) => {
-        try {
-            const users = await user.findAll();
-            res.status(201).json(users);
-        } catch (err) {
-            console.log(err, "GET ALL user");
-            next(err);
-            console.log(err);
-        }
-    },
-    register: async (req, res, next) => {
-        try {
-          const { first_name, email, password } = req.body;
-          
-          const emailExists = await user.findOne({
-              where: {
-                email: email,
-              },
-          });
-          //je suis de retour
-          if(emailExists) {
-            throw new BadRequestError('This is user already exist');  
-          } else {
-            const salt = parseInt(env.salt_rounds);
-            const hashedPassword = await bcrypt.hash(password, salt);
-            
-            const user = await user.create({
-              first_name,
-              email,
-              password: hashedPassword,
-            });
-            console.log(user,"After create");
-            res.status(201).json( user );
-          }
-        } catch (err) {
-          console.log(err,"ERROOR REGISTER user");
-          next(err);
-        }
-      },
+  getAll = async (req, res, next) => {
+    try {
+      console.log('getAll', req.body);
+      // const user = req.userID;
+      const users = await User.findAll();
+      res.status(200).json(users);
+    } catch (error) {
+      next(error);
+      console.log(error);
+    }
+  }
 
-      login: async (req, res, next) => {
-        try {
-          console.log(req.body);
-          const { email, password } = req.body;
-          const user = await user.findOne({
-            where: { email }
-          });
-          if (!user) {
-            throw new BadRequestError("Sorry! Account does not exists .")
-          } else {
-            console.log("LOGIN req body after veriyemail", user);
-            const verifyPasswordBcrypt = await bcrypt.compare(password, user.password);
-            if(!verifyPasswordBcrypt) {
-              throw new BadRequestError("Your password is false .");
-            } else {
-              user.access_token = jwt.sign({ id: user.id , email: user.email }, env.jwt_secret, { expiresIn: '5m' });
-              user.refresh_token = jwt.sign({ id: user.id }, env.jwt_secret, { expiresIn: '60d' });
-              await user.save();
-              res.cookie('refresh_token', user.refresh_token, { expiresIn: '60d', httpOnly: 'true'});
-              res.status(CREATED).json('Hello user ' + user.first_name);
-            }
+  register = async (req, res, next) => {
+    try {
+      console.log('register', req.body);
+      const { firstName, email, password } = req.body;
 
-          }
-        } catch (err) {
-          console.error("LOGIN ERROR", err)
-            next(err);
-        }
-    },
-};
-module.exports = userController
+      // if (!email || !password || !firstName)
+
+      // throw new BadRequestError('il manque des informations');
+      const emailExists = await User.findOne({
+        where: {
+          email: email,
+        },
+      });
+      console.log(email, password, firstName);
+      console.log('emailExists', emailExists);
+      if (emailExists) {
+        throw new BadRequestError('This is user already exist');
+      } else {
+        
+        console.log('saltRounds', password);
+        const hash = await bcrypt.hash(password, 10);
+        const userRegister = await User.create({
+          email,
+          firstName,
+          password: hash
+        });
+        console.log('user', userRegister);
+        res.status(201).json(userRegister);
+
+      }
+    } catch (error) {
+      console.log('getAll', error);
+      next(error);
+    }
+  }
+  login = async (req, res, next) => {
+    try {
+      const { email, password } = { ...req.body };
+
+      if (!email || !password)
+        throw new ForbiddenError('Il manque des informations. Veuillez remplir tous les champs');
+
+      const user = await User.findOne({ where: { email } });
+      if (!user)
+        throw new ForbiddenError("Oups je connais pas Cet utilisateur (email).");
+      console.log(user);
+      const result = await bcrypt.compare(password, user.password);
+      if (!result)
+        throw new ForbiddenError("Oups Le mot de passe est incorrect.");
+
+      const token = await Jwt.sign({ id: user.id }, env.jwt_secret);
+      user.access_token = Jwt.sign({ id: user.id, email: user.email }, env.jwt_secret, { expiresIn: '5m' });
+      user.refresh_token = Jwt.sign({ id: user.id }, env.jwt_secret, { expiresIn: '60d' });
+      await user.save();
+
+      res.header('Autorisation', `Bearer ${token}`);
+      res.cookie('refresh_token', user.refresh_token, { expiresIn: '60d', httpOnly: 'true' });
+      res.status(200).json('auth succes is ok ')
+
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+export default UserController;

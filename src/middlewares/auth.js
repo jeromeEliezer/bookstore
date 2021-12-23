@@ -1,6 +1,6 @@
-import { jwt_secret } from "../config/Env";
+import { jwt_secret } from "../config/env";
 import UnauthorizedError from "../helpers/errors/401_unauthorized";
-import Patient from "../modules/Patient/PatientModel";
+import User from "../modules/User/UserModel";
 
 
 const isAuth = async (req, res, next) => {
@@ -11,14 +11,14 @@ const isAuth = async (req, res, next) => {
         if(!refresh_token)
             throw new UnauthorizedError('Access denied. Your session expired.');
         
-        let patient = await Patient.findOne({  where: { access_token, refresh_token } });
+        let user = await User.findOne({  where: { access_token, refresh_token } });
         
-        if(!patient)
+        if(!user)
             throw new UnauthorizedError('Access denied. Your session expired.');
         
         await jwt_secret.verify( access_token, config.jwt_secret );
         
-        req.patient = patient;
+        req.user = user;
         next();
 
     } catch (e) {
@@ -33,11 +33,11 @@ const refreshAccess = async (req, res, next) => {
             return res.status(401).json('Access denied. Your session expired');
 
         const decoded = await jwt.verify(refresh_token, config.jwt_secret);
-        const patient = await Patient.findOne({ where: { id: decoded.id } });
-        patient.access_token = jwt.sign({ id: patient.id, email: patient.email }, config.jwt_secret, { expiresIn: '5m' });
-        await patient.save();
+        const user = await User.findOne({ where: { id: decoded.id } });
+        user.access_token = jwt.sign({ id: user.id, email: user.email }, config.jwt_secret, { expiresIn: '5m' });
+        await user.save();
         
-        res.status(200).json(patient);
+        res.status(200).json(user);
         
     } catch (error) {
         return res.status(401).json(error.message);
