@@ -1,4 +1,4 @@
 📖 BOOOKSTORE Front 
 
-### this is a React app read wiht typescript languages 💥
+### this is a React app. he readed with typescript language. 💥
 
